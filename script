@@ -1,0 +1,31 @@
+const express = require('express');
+const bodyParser = require('body-parser');
+const app = express();
+const port = 3000;
+
+let userPassword = '';
+let authorizedDevices = ['Device1', 'Device2']; // Example authorized devices
+
+app.use(bodyParser.json());
+
+// Endpoint to set the user-defined password
+app.post('/set-password', (req, res) => {
+    userPassword = req.body.password;
+    res.json({ message: 'Password set successfully!' });
+});
+
+// Endpoint to monitor connected devices (mock implementation)
+app.get('/monitor-devices', (req, res) => {
+    const connectedDevices = getConnectedDevices(); // Mock function to get devices
+    res.json({ devices: connectedDevices });
+});
+
+// Mock function to simulate connected devices
+function getConnectedDevices() {
+    return ['Device1', 'Device3']; // Example connected devices
+}
+
+// Start the server
+app.listen(port, () => {
+    console.log(`SecureConnect app listening at http://localhost:${port}`);
+});
