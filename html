@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SecureConnect</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #e9ecef;
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+        }
+        .container {
+            background: #ffffff;
+            border-radius: 10px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+            padding: 30px;
+            width: 100%;
+            max-width: 400px;
+        }
+        h1 {
+            color: #343a40;
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        label {
+            font-weight: bold;
+            margin-bottom: 5px;
+            display: block;
+        }
+        input[type="password"], input[type="text"] {
+            padding: 12px;
+            width: 100%;
+            border: 1px solid #ced4da;
+            border-radius: 5px;
+            margin-bottom: 15px;
+            transition: border-color 0.3s;
+        }
+        input[type="password"]:focus, input[type="text"]:focus {
+            border-color: #80bdff;
+            outline: none;
+        }
+        button {
+            padding: 12px;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            width: 100%;
+            transition: background-color 0.3s;
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
+        .button-secondary {
+            background-color: #6c757d;
+        }
+        .button-secondary:hover {
+            background-color: #5a6268;
+        }
+        .message {
+            color: #dc3545;
+            text-align: center;
+            margin-top: 10px;
+        }
+        .strength-meter {
+            height: 5px;
+            border-radius: 5px;
+            margin-top: 5px;
+            transition: width 0.3s;
+        }
+        .strength-weak {
+            background-color: #dc3545;
+            width: 33%;
+        }
+        .strength-medium {
+            background-color: #ffc107;
+            width: 66%;
+        }
+        .strength-strong {
+            background-color: #28a745;
+            width: 100%;
+        }
+    </style>
+    <script>
+        let userPassword = '';
+
+        // Function to validate password
+        function validatePassword(password) {
+            const minLength = 8;
+            const hasUpperCase = /[A-Z]/.test(password);
+            const hasLowerCase = /[a-z]/.test(password);
+            const hasNumbers = /\d/.test(password);
+            const hasSpecialChars = /[!@#$%^&*]/.test(password);
+            return password.length >= minLength && hasUpperCase && hasLowerCase && hasNumbers && hasSpecialChars;
+        }
+
+        // Function to check password strength
+        function checkPasswordStrength(password) {
+            const strengthMeter = document.getElementById('strength-meter');
+            if (password.length < 8) {
+                strengthMeter.className = 'strength-meter strength-weak';
+            } else if (validatePassword(password)) {
+                strengthMeter.className = 'strength-meter strength-strong';
+            } else {
+                strengthMeter.className = 'strength-meter strength-medium';
+            }
+        }
+
+        async function setPassword() {
+            const password = document.getElementById('password').value;
+            const messageElement = document.getElementById('message');
+
+            if (!validatePassword(password)) {
+                messageElement.textContent = 'Password must be at least 8 characters long and include uppercase, lowercase, numbers, and special characters.';
+                return;
+            }
+
+            localStorage.setItem('userPassword', password); // Store password in local storage
+            const response = await fetch('/set-password', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ password })
+            });
+
+            if (!response.ok) {
+                messageElement.textContent = 'Error setting password. Please try again.';
+                return;
+            }
+
+            const result = await response.json();
+            messageElement.textContent = result.message;
+        }
+
+        async function monitorDevices() {
+            const response = await fetch('/monitor-devices');
+            if (!response.ok) {
+                alert('Error retrieving devices. Please try again.');
+                return;
+            }
+            const result = await response.json();
+            alert('Connected Devices: ' + result.devices.join(', '));
+        }
+
+        // Load password from local storage on page load
+        window.onload = function() {
+            const storedPassword = localStorage.getItem('userPassword');
+            if (storedPassword) {
+                document.getElementById('password').value = storedPassword;
+            }
+        };
+    </script>
+</head>
+<body>
+    <div class="container">
+        <h1>SecureConnect</h1>
+        <label for="username">Username:</label>
+        <input type="text" id="username" required>
+        <label for="password">Set Your Password:</label>
+        <input type="password" id="password" required oninput="checkPasswordStrength(this.value)">
+        <div id="strength-meter" class="strength-meter"></div>
+        <button onclick="setPassword()">Set Password</button>
+        <button class="button-secondary" onclick="monitorDevices()">Monitor Devices</button>
+        <div id="message" class="message"></div>
+    </div>
+</body>
+</html>
